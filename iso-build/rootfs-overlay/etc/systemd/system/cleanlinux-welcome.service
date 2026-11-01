@@ -1,0 +1,11 @@
+[Unit]
+Description=CleanLinux Welcome Message
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo "Welcome to CleanLinux! 输入 startx 启动图形桌面, 输入 wallpaper 切换动态壁纸"'
+StandardInput=tty
+
+[Install]
+WantedBy=multi-user.target

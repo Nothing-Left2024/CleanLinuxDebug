@@ -1,0 +1,63 @@
+name: Build CleanLinux ISO
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo pacman -Syu archiso base-devel git --noconfirm || \
+        sudo apt update && sudo apt install -y archiso genisoimage xorriso git
+        
+    - name: Build ISO
+      run: |
+        cd iso-build
+        sudo bash build-iso.sh
+        
+    - name: Upload ISO artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CleanLinux-RTX2060
+        path: iso-build/output/CleanLinux_RTX2060_x86_64.iso
+        retention-days: 30
+        
+    - name: Release ISO
+      if: github.event_name == 'workflow_dispatch'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: iso-build/output/CleanLinux_RTX2060_x86_64.iso
+        tag_name: v1.0
+        name: CleanLinux RTX 2060 Edition
+        body: |
+          ## CleanLinux - Arch Linux Custom ISO
+          
+          ### Features:
+          - NVIDIA RTX 2060 support (CUDA 7.5)
+          - llama.cpp with GPU acceleration
+          - Dynamic wallpaper (mpv)
+          - Frosted glass effect (picom)
+          - CLI default boot (~100MB RAM)
+          
+          ### GPU Specs:
+          - GeForce RTX 2060 (6GB GDDR6)
+          - CUDA Compute Capability: 7.5
+          - Recommended: Q4_K_M quantization
+          
+          ### Usage:
+          ```bash
+          # Write to USB
+          dd if=CleanLinux_RTX2060_x86_64.iso of=/dev/sdX bs=4M status=progress
+          
+          # Boot and install
+          startx                    # GUI mode
+          llama-cli -m model.gguf   # LLM inference
+          ```

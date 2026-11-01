@@ -1,0 +1,12 @@
+CleanLinux - Arch Linux 自定义发行版
+=====================================
+启动方式:
+  - CLI 模式: 开机直接进入命令行 (内存 ~100MB)
+  - GUI 模式: 输入 startx 启动图形桌面
+  - 动态壁纸: 输入 wallpaper /path/to/video.mp4
+  - GPU 监控: 输入 nvtop
+  - 本地推理: 输入 llama-cli -m model.gguf -ngl 35
+
+NVIDIA 驱动已预装，CUDA 加速就绪。
+llama.cpp 已编译，支持 GPU 推理。
+picom compositor 已配置液态玻璃效果。

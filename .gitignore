@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ISO builds
+iso-build/output/*.iso
+iso-build/workspace/
+iso-build/archlinux-*.iso
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+
+# Build artifacts
+*.tar.gz
+*.pkg
+
+# Logs
+*.log
+# Large ISO files
+*.iso
+*.img
+
+# Extracted directories
+extracted/
+iso_content/
+workspace/
+output/workspace/

@@ -1,0 +1,12 @@
+[Unit]
+Description=NVIDIA Power & Clock Optimization
+After=modules-load.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/nvidia-smi -pm 1
+ExecStart=/usr/bin/nvidia-smi -lgc 1200,1800
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
