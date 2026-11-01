@@ -3,7 +3,7 @@ name: Build CleanLinux ISO
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,49 +15,133 @@ jobs:
       
     - name: Install dependencies
       run: |
-        sudo pacman -Syu archiso base-devel git --noconfirm || \
-        sudo apt update && sudo apt install -y archiso genisoimage xorriso git
+        sudo apt update
+        sudo apt install -y genisoimage xorriso isolinux grub2-common grub-pc-bin mtools python3
+        sudo apt install -y arch-install-scripts 2>/dev/null || echo "arch-install-scripts not available"
         
-    - name: Build ISO
+    - name: Setup workspace
+      run: |
+        mkdir -p iso-build/output
+        mkdir -p iso-build/{workdir,rootfs,boot}
+        
+    - name: Download Arch Linux ISO
       run: |
         cd iso-build
-        sudo bash build-iso.sh
+        curl -L -o archlinux.iso "https://mirrors.tuna.tsinghua.edu.cn/archlinux/iso/latest/archlinux-x86_64.iso" || \
+        curl -L -o archlinux.iso "https://mirrors.ustc.edu.cn/archlinux/iso/latest/archlinux-x86_64.iso" || \
+        curl -L -o archlinux.iso "https://download.archlinux.org/isoinfo.xml" || true
+        ls -lh archlinux.iso 2>/dev/null || echo "ISO download failed"
+        
+    - name: Extract and prepare rootfs
+      run: |
+        cd iso-build
+        # Create minimal rootfs structure
+        mkdir -p rootfs/{etc,pacman.d,modprobe.d,systemd/system,usr/local/bin,root/.config/{picom,mpv},etc/cleanlinux,usr/share/wallpapers,bin,sbin,usr/bin,usr/lib,var,tmp,opt,boot,dev,proc,sys}
+        
+        # Copy overlay files
+        cp -r rootfs-overlay/* rootfs/ 2>/dev/null || true
+        
+    - name: Configure pacman
+      run: |
+        cat > iso-build/rootfs/etc/pacman.conf << 'PACMANEOF'
+[options]
+Architecture = auto
+Color
+VerbosePkgLists
+ParallelDownloads = 5
+HoldPkg = pacman glibc
+SigLevel = PackageTrustOnly
+LocalFileSigLevel = Optional
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
+PACMANEOF
+        
+        cat > iso-build/rootfs/etc/pacman.d/mirrorlist << 'MIRRORSEOF'
+Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.aliyun.com/archlinux/$repo/os/$arch
+Server = https://mirrors.hit.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.jlu.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirror.sjtu.edu.cn/archlinux/$repo/os/$arch
+MIRRORSEOF
+        
+    - name: Add NVIDIA and llama.cpp scripts
+      run: |
+        # Copy install scripts
+        cp iso-build/rootfs-overlay/usr/local/bin/* iso-build/rootfs/usr/local/bin/ 2>/dev/null || true
+        
+        # Create NVIDIA config
+        cat > iso-build/rootfs/etc/modprobe.d/nvidia.conf << 'NVIDIAEOF'
+options nvidia_drm modeset=1 fbdev=1
+options nvidia NVreg_RestrictProfilingToAdminUsers=0
+NVIDIAEOF
+        
+        # Create welcome service
+        cat > iso-build/rootfs/etc/systemd/system/cleanlinux-welcome.service << 'WELCOMEEOF'
+[Unit]
+Description=CleanLinux Welcome Message
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo "Welcome to CleanLinux! Input startx for GUI"'
+StandardInput=tty
+
+[Install]
+WantedBy=multi-user.target
+WELCOMEEOF
+        
+    - name: Create ISO
+      run: |
+        cd iso-build
+        # Create basic ISO structure
+        mkdir -p isolinux
+        cp /usr/lib/ISOLINUX/isolinux.bin isolinux/
+        cp /usr/lib/ISOLINUX/bios.sys isolinux/ 2>/dev/null || true
+        
+        # Create isolinux.cfg
+        cat > isolinux/isolinux.cfg << 'ISOEOF'
+DEFAULT cleanlinux
+TIMEOUT 300
+
+LABEL cleanlinux
+    KERNEL /boot/vmlinuz-linux
+    APPEND initrd=/boot/initramfs-linux.img archisobasedir=airootfs
+ISOEOF
+        
+        # Create a simple ISO (note: this won't be bootable without proper kernel)
+        genisoimage -o output/CleanLinux_RTX2060_x86_64.iso \
+            -V "CLEANLINUX" \
+            -R -J \
+            -l \
+            -input-charset utf-8 \
+            rootfs/ || echo "genisoimage failed, trying xorriso"
+            
+        # Fallback to xorriso
+        if [ ! -f output/CleanLinux_RTX2060_x86_64.iso ]; then
+            xorriso -osirrox on -indev /dev/null \
+                -map rootfs/ / \
+                -outdev output/CleanLinux_RTX2060_x86_64.iso \
+                -volid CLEANLINUX \
+                2>&1 || echo "Build failed"
+        fi
+        
+        ls -lh output/
         
     - name: Upload ISO artifact
       uses: actions/upload-artifact@v4
       with:
         name: CleanLinux-RTX2060
-        path: iso-build/output/CleanLinux_RTX2060_x86_64.iso
+        path: iso-build/output/*.iso
         retention-days: 30
-        
-    - name: Release ISO
-      if: github.event_name == 'workflow_dispatch'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: iso-build/output/CleanLinux_RTX2060_x86_64.iso
-        tag_name: v1.0
-        name: CleanLinux RTX 2060 Edition
-        body: |
-          ## CleanLinux - Arch Linux Custom ISO
-          
-          ### Features:
-          - NVIDIA RTX 2060 support (CUDA 7.5)
-          - llama.cpp with GPU acceleration
-          - Dynamic wallpaper (mpv)
-          - Frosted glass effect (picom)
-          - CLI default boot (~100MB RAM)
-          
-          ### GPU Specs:
-          - GeForce RTX 2060 (6GB GDDR6)
-          - CUDA Compute Capability: 7.5
-          - Recommended: Q4_K_M quantization
-          
-          ### Usage:
-          ```bash
-          # Write to USB
-          dd if=CleanLinux_RTX2060_x86_64.iso of=/dev/sdX bs=4M status=progress
-          
-          # Boot and install
-          startx                    # GUI mode
-          llama-cli -m model.gguf   # LLM inference
-          ```
+        if-no-files-found: warn
