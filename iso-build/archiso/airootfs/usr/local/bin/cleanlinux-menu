@@ -1,0 +1,31 @@
+#!/bin/sh
+# CleanLinux 文本菜单 — 显示在命令行模式
+run() { clear; "$@"; }
+
+while :; do
+  clear
+  echo "╔═══════════════════════════════════════════════════╗"
+  echo "║            CleanLinux 系统菜单（命令行模式）       ║"
+  echo "║            内存占用约 120MB · 按 Enter 继续          ║"
+  echo "╚═══════════════════════════════════════════════════╝"
+  echo ""
+  echo "  [1] 图形化试用系统（openbox + 液态玻璃 + 动态壁纸）"
+  echo "  [2] 图形化安装系统（calamares / archinstall）"
+  echo "  [3] 安装 NVIDIA 驱动（RTX 2060 优化）"
+  echo "  [4] 编译 llama.cpp（CUDA 加速）"
+  echo "  [5] 文本模式安装系统（archinstall）"
+  echo "  [6] 查看系统状态（内存/GPU/磁盘）"
+  echo "  [0] 返回 Shell"
+  echo ""
+  read -r -p "请选择: " choice
+  case "$choice" in
+    1) exec /usr/local/bin/cleanlinux-gui-start ;;
+    2) exec /usr/local/bin/cleanlinux-gui-start --installer ;;
+    3) clear; /usr/local/bin/install-nvidia ;;
+    4) clear; /usr/local/bin/install-llama-cpp ;;
+    5) clear; archinstall ;;
+    6) clear; free -h; echo; nvidia-smi 2>/dev/null || inxi -G; echo; df -h / ;;
+    0) echo "已返回 Shell"; break ;;
+    *) echo "无效选项"; sleep 1 ;;
+  esac
+done

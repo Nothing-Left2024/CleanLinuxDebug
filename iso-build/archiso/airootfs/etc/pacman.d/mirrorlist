@@ -1,0 +1,9 @@
+# CleanLinux 中国镜像源（按优先级排列）
+Server = https://mirrors.tuna.tsinghua.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.ustc.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.aliyun.com/archlinux/$repo/os/$arch
+Server = https://mirrors.hit.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirrors.jlu.edu.cn/archlinux/$repo/os/$arch
+Server = https://mirror.sjtu.edu.cn/archlinux/$repo/os/$arch
+# 官方源（兜底）
+Server = https://mirror.rackspace.com/archlinux/$repo/os/$arch

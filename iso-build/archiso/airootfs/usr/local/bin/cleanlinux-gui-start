@@ -1,0 +1,8 @@
+#!/bin/sh
+# 从命令行模式进入图形模式
+#   cleanlinux-gui-start                # 图形化试用系统
+#   cleanlinux-gui-start --installer    # 图形化安装系统
+case "$1" in
+  --installer) export CLEANLINUX_INSTALLER=1 ;;
+esac
+exec /usr/local/bin/cleanlinux-gui

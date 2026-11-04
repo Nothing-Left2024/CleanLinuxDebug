@@ -1,0 +1,15 @@
+[Unit]
+Description=CleanLinux GUI session (graphical desktop + wallpaper + frosted glass)
+ConditionKernelCommandLine=cleanlinux_session=gui
+After=basic.target multi-user.target systemd-networkd-wait-online.service
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+Environment=CLEANLINUX_SESSION=gui
+ExecStartPre=/usr/bin/systemctl stop getty@tty1.service
+ExecStart=/usr/local/bin/cleanlinux-gui
+
+[Install]
+WantedBy=multi-user.target

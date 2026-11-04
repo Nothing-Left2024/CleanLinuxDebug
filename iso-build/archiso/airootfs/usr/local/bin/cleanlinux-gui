@@ -1,0 +1,4 @@
+#!/bin/sh
+# CleanLinux GUI 会话入口：startx 加载 root/.xinitrc
+# （壁纸 + picom 液态玻璃 + openbox + tint2，安装器会话自动弹出 calamares）
+exec /usr/bin/startx

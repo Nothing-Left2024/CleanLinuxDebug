@@ -1,0 +1,86 @@
+# ── 基础系统 ──
+base
+linux
+linux-firmware
+intel-ucode
+amd-ucode
+mkinitcpio
+mkinitcpio-archiso
+sudo
+dialog
+nano
+git
+curl
+wget
+less
+file
+htop
+inxi
+pciutils
+sysstat
+net-tools
+tcpdump
+reflector
+# ── 安装器 ──
+archinstall
+calamares
+gparted
+cryptsetup
+efibootmgr
+gptfdisk
+gdisk
+lvm2
+btrfs-progs
+dosfstools
+openssh
+openresolv
+iwd
+iw
+dhcpcd
+networkmanager
+# ── X 基础 ──
+xorg-server
+xorg-xinit
+xorg-xset
+xorg-xkbcomp
+xorg-xhost
+mesa
+vluxe
+fontconfig
+terminus-font
+noto-fonts-emoji
+nerd-fonts
+papirus-icon-theme
+hicolor-icon-theme
+# ── 桌面 ──
+openbox
+tint2
+picom
+dmenu
+alacritty
+mpv
+# ── NVIDIA ──
+nvidia-dkms
+nvidia-utils
+nvidia-settings
+opencl-nvidia
+nvtop
+# ── 工具 ──
+neovim
+bat
+make
+gcc
+cmake
+feh
+xterm
+xorg-xkill
+gpart
+memtest86+
+memtest86+-efi
+# ── llama.cpp 构建工具链 ──
+python
+xwinwrap
+x11-check
+# ── 引导与字体 ──
+syslinux
+noto-fonts-cjk

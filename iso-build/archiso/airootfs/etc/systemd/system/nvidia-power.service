@@ -1,0 +1,13 @@
+[Unit]
+Description=NVIDIA Power & Clock Optimization (RTX 2060)
+After=modules-load.service
+ConditionPathExists=/usr/bin/nvidia-smi
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/nvidia-smi -pm 1
+ExecStart=/usr/bin/nvidia-smi -lgc 1400,1695
+
+[Install]
+WantedBy=multi-user.target

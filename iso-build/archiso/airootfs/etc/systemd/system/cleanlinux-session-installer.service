@@ -1,0 +1,16 @@
+[Unit]
+Description=CleanLinux Installer session (graphical installer on desktop)
+ConditionKernelCommandLine=cleanlinux_session=installer
+After=basic.target multi-user.target systemd-networkd-wait-online.service
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/root
+Environment=CLEANLINUX_SESSION=installer
+Environment=CLEANLINUX_INSTALLER=1
+ExecStartPre=/usr/bin/systemctl stop getty@tty1.service
+ExecStart=/usr/local/bin/cleanlinux-gui
+
+[Install]
+WantedBy=multi-user.target
