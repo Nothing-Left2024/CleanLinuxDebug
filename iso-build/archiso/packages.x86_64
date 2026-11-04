@@ -6,6 +6,7 @@ intel-ucode
 amd-ucode
 mkinitcpio
 mkinitcpio-archiso
+syslinux
 sudo
 dialog
 nano
@@ -23,12 +24,11 @@ tcpdump
 reflector
 # ── 安装器 ──
 archinstall
-calamares
 gparted
+gpart
 cryptsetup
 efibootmgr
 gptfdisk
-gdisk
 lvm2
 btrfs-progs
 dosfstools
@@ -44,12 +44,12 @@ xorg-xinit
 xorg-xset
 xorg-xkbcomp
 xorg-xhost
+xorg-xkill
 mesa
-vluxe
 fontconfig
 terminus-font
 noto-fonts-emoji
-nerd-fonts
+noto-fonts-cjk
 papirus-icon-theme
 hicolor-icon-theme
 # ── 桌面 ──
@@ -59,8 +59,11 @@ picom
 dmenu
 alacritty
 mpv
-# ── NVIDIA ──
-nvidia-dkms
+feh
+xwallpaper
+xterm
+# ── NVIDIA (RTX 2060) ──
+nvidia-open-dkms
 nvidia-utils
 nvidia-settings
 opencl-nvidia
@@ -71,16 +74,7 @@ bat
 make
 gcc
 cmake
-feh
-xterm
-xorg-xkill
-gpart
+python
+# ── 内存测试 ──
 memtest86+
 memtest86+-efi
-# ── llama.cpp 构建工具链 ──
-python
-xwinwrap
-x11-check
-# ── 引导与字体 ──
-syslinux
-noto-fonts-cjk

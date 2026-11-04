@@ -10,7 +10,7 @@ while :; do
   echo "╚═══════════════════════════════════════════════════╝"
   echo ""
   echo "  [1] 图形化试用系统（openbox + 液态玻璃 + 动态壁纸）"
-  echo "  [2] 图形化安装系统（calamares / archinstall）"
+  echo "  [2] 图形化安装系统（archinstall）"
   echo "  [3] 安装 NVIDIA 驱动（RTX 2060 优化）"
   echo "  [4] 编译 llama.cpp（CUDA 加速）"
   echo "  [5] 文本模式安装系统（archinstall）"
