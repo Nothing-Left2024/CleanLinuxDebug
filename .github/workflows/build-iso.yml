@@ -8,38 +8,34 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: archlinux:latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
-    - name: Install base tools
-      run: |
-        pacman -Sy --noconfirm --needed git nodejs tar
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    - name: Clone repository
-      run: |
-        git clone https://github.com/Nothing-Left2024/CleanLinuxDebug.git /workspace
-        echo "WORKDIR=/workspace" >> $GITHUB_ENV
+    - name: Setup Docker
+      uses: docker/setup-docker@v4
 
-    - name: Install build dependencies
+    - name: Build ISO in privileged Arch container
       run: |
-        pacman -S --noconfirm --needed \
-          base-devel xorriso mtools squashfs-tools archiso
-
-    - name: Build ISO with mkarchiso
-      run: |
-        cd ${{ env.WORKDIR }}/iso-build
-        mkarchiso -v -w /root/work -o /root/out archiso
-
-    - name: Show output
-      run: |
-        ls -lh /root/out/
-        file /root/out/*.iso
+        docker run --privileged --rm \
+          -v "$(pwd)/iso-build/archiso:/src:ro" \
+          -v "$(pwd)/iso-out:/out" \
+          archlinux:latest bash -e -c '
+            set -e
+            echo "==> 安装 archiso 及构建依赖..."
+            pacman -Sy --noconfirm --needed base-devel xorriso mtools squashfs-tools archiso
+            echo "==> 运行 mkarchiso..."
+            mkarchiso -v -w /root/work -o /out /src
+          '
+        ls -lh iso-out/
+        file iso-out/*.iso
 
     - name: Upload ISO artifact
       uses: actions/upload-artifact@v4
       with:
         name: CleanLinux-RTX2060
-        path: /root/out/*.iso
+        path: iso-out/*.iso
         retention-days: 30
         if-no-files-found: error
