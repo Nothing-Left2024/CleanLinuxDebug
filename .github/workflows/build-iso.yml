@@ -21,21 +21,18 @@ jobs:
         echo "==> 创建输出目录..."
         mkdir -p iso-out
         
-        echo "==> 拉取并运行 Arch Linux 容器..."
-        docker pull archlinux:latest || {
-          echo "==> 尝试备用镜像..."
-          docker pull docker.io/archlinux/archlinux:latest
-        }
+        echo "==> 拉取 Arch Linux 镜像..."
+        docker pull archlinux:latest
         
-        echo "==> 运行 mkarchiso..."
-        docker run --rm \
+        echo "==> 运行 mkarchiso（需要 --privileged 以挂载 proc/sys）..."
+        docker run --privileged --rm \
           -v "$(pwd)/iso-build/archiso:/src:ro" \
           -v "$(pwd)/iso-out:/out" \
           archlinux:latest \
           bash -e -c '
             set -e
-            echo "==> 安装构建依赖..."
-            pacman -Sy --noconfirm --needed base-devel xorriso mtools squashfs-tools archiso 2>&1 || true
+            echo "==> 安装 archiso 及构建依赖..."
+            pacman -Sy --noconfirm --needed base-devel xorriso mtools squashfs-tools archiso
             
             echo "==> 运行 mkarchiso..."
             mkarchiso -v -w /work -o /out /src
