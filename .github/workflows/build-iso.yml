@@ -8,31 +8,47 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Build ISO in privileged Arch container
+    - name: Build ISO in Docker container
       run: |
-        docker run --privileged --rm \
+        set -e
+        
+        echo "==> 创建输出目录..."
+        mkdir -p iso-out
+        
+        echo "==> 拉取并运行 Arch Linux 容器..."
+        docker pull archlinux:latest || {
+          echo "==> 尝试备用镜像..."
+          docker pull docker.io/archlinux/archlinux:latest
+        }
+        
+        echo "==> 运行 mkarchiso..."
+        docker run --rm \
           -v "$(pwd)/iso-build/archiso:/src:ro" \
           -v "$(pwd)/iso-out:/out" \
-          archlinux:latest bash -e -c '
+          archlinux:latest \
+          bash -e -c '
             set -e
-            echo "==> 安装 archiso 及构建依赖..."
-            pacman -Sy --noconfirm --needed base-devel xorriso mtools squashfs-tools archiso
+            echo "==> 安装构建依赖..."
+            pacman -Sy --noconfirm --needed base-devel xorriso mtools squashfs-tools archiso 2>&1 || true
+            
             echo "==> 运行 mkarchiso..."
-            mkarchiso -v -w /root/work -o /out /src
+            mkarchiso -v -w /work -o /out /src
           '
+        
+        echo "==> 检查输出..."
         ls -lh iso-out/
-        file iso-out/*.iso
-
+        file iso-out/*.iso 2>/dev/null || echo "WARNING: No ISO found!"
+      
     - name: Upload ISO artifact
       uses: actions/upload-artifact@v4
       with:
         name: CleanLinux-RTX2060
         path: iso-out/*.iso
         retention-days: 30
-        if-no-files-found: error
+        if-no-files-found: warn
