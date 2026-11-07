@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <openbox_menu xmlns="http://openbox.org/menu">
   <menu id="root-menu" label="CleanLinux">
-    <item label="终端 (Alacritty)">
-      <action name="Execute"><command>alacritty</command></action>
+    <item label="⬇ 安装系统到磁盘 (archinstall)">
+      <action name="Execute"><command>cleanlinux-terminal "CleanLinux 图形化安装" "archinstall"</command></action>
     </item>
     <separator label="CleanLinux 工具"/>
     <item label="功能编辑器 (开关功能省内存)">
@@ -15,23 +15,23 @@
       <action name="Execute"><command>lxtask</command></action>
     </item>
     <item label="GPU 详情 (nvtop)">
-      <action name="Execute"><command>alacritty -e nvtop</command></action>
+      <action name="Execute"><command>cleanlinux-terminal "GPU 监控" "nvtop"</command></action>
+    </item>
+    <item label="终端">
+      <action name="Execute"><command>cleanlinux-terminal "终端" "sh"</command></action>
     </item>
     <item label="应用启动器 (dmenu)">
       <action name="Execute"><command>dmenu_run</command></action>
     </item>
-    <separator label="安装与驱动"/>
-    <item label="文本安装器 (archinstall)">
-      <action name="Execute"><command>alacritty -e archinstall</command></action>
-    </item>
+    <separator label="驱动与开发"/>
     <item label="安装 NVIDIA 驱动">
-      <action name="Execute"><command>alacritty -e /bin/sh -c 'install-nvidia; read -p "按回车关闭..."'</command></action>
+      <action name="Execute"><command>cleanlinux-terminal "NVIDIA 驱动安装" "install-nvidia"</command></action>
     </item>
     <item label="编译 llama.cpp (CUDA)">
-      <action name="Execute"><command>alacritty -e /bin/sh -c 'install-llama-cpp; read -p "按回车关闭..."'</command></action>
+      <action name="Execute"><command>cleanlinux-terminal "llama.cpp 编译" "install-llama-cpp"</command></action>
     </item>
     <item label="系统菜单 (文本)">
-      <action name="Execute"><command>alacritty -e cleanlinux-menu</command></action>
+      <action name="Execute"><command>cleanlinux-terminal "CleanLinux 菜单" "cleanlinux-menu"</command></action>
     </item>
     <separator label="系统"/>
     <item label="磁盘管理 (GParted)">

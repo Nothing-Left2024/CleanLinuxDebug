@@ -8,6 +8,25 @@ INSTALLER=0
 case "$cmdline" in *cleanlinux_session=installer*) INSTALLER=1 ;; esac
 [ "${CLEANLINUX_INSTALLER}" = "1" ] && INSTALLER=1
 
+# ── 终端可用性探测（最先执行, 此时根窗口还是黑的, 闪烁不可见）──
+# alacritty 需要 OpenGL 3.3, 虚拟机无 3D 加速时自动回退 xterm
+if [ ! -r /run/cleanlinux-term ]; then
+    if command -v alacritty >/dev/null 2>&1; then
+        alacritty -e sleep 3 >/dev/null 2>&1 &
+        TP=$!
+        sleep 1
+        if kill -0 "$TP" 2>/dev/null; then
+            echo alacritty > /run/cleanlinux-term
+        else
+            echo xterm > /run/cleanlinux-term
+        fi
+        kill "$TP" 2>/dev/null
+        wait "$TP" 2>/dev/null
+    else
+        echo xterm > /run/cleanlinux-term
+    fi
+fi
+
 # ── 功能配置（默认值, features.conf 可覆盖）──
 WALLPAPER=on
 BLUR_STRENGTH=12
@@ -43,8 +62,8 @@ fi
 
 # ── 安装器会话：桌面就绪后自动弹出图形安装器 ──
 if [ "$INSTALLER" = "1" ]; then
-    ( sleep 4
-      alacritty --title "CleanLinux 图形化安装" -e /bin/sh -c 'archinstall; read -p "安装完成，按回车关闭窗口..." ' &
+    ( sleep 3
+      /usr/local/bin/cleanlinux-terminal "CleanLinux 图形化安装" "archinstall" &
     ) &
 fi
 

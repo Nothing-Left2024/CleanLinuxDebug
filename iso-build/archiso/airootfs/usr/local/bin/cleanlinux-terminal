@@ -1,0 +1,23 @@
+#!/bin/sh
+# CleanLinux 终端包装器 — 虚拟机/无 3D 加速环境自动回退
+# alacritty 需要 OpenGL 3.3; 失败时自动改用 xterm
+# 用法: cleanlinux-terminal "窗口标题" "命令串"
+#       命令串执行完后自动等待回车 (防止窗口闪退)
+
+TITLE="${1:-CleanLinux}"
+shift
+CMD="${*:-sh}"
+
+# 读取会话开始时的探测结果 (xinitrc 写入)
+TERM_BIN=$(cat /run/cleanlinux-term 2>/dev/null)
+case "$TERM_BIN" in
+    alacritty|xterm) ;;
+    *) TERM_BIN=xterm ;;
+esac
+
+if [ "$TERM_BIN" = "alacritty" ]; then
+    exec alacritty --title "$TITLE" -e /bin/sh -c "$CMD; echo; read -p '按回车关闭...' _"
+else
+    # xterm 固定较大尺寸 (archinstall TUI 需要 ≥80x24)
+    exec xterm -T "$TITLE" -geometry 110x32 -e /bin/sh -c "$CMD; echo; read -p '按回车关闭...' _"
+fi

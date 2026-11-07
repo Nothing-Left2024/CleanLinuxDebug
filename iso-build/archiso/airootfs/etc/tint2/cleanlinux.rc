@@ -44,9 +44,10 @@ clock_background_id = 0
 launcher_icon_theme = Papirus
 launcher_icon_size = 24
 launcher_item_app_padding = 4
-launcher_item_app = /usr/share/applications/alacritty.desktop
+launcher_item_app = /usr/share/applications/cleanlinux-installer.desktop
 launcher_item_app = /usr/share/applications/cleanlinux-features.desktop
 launcher_item_app = /usr/share/applications/cleanlinux-monitor.desktop
+launcher_item_app = /usr/share/applications/alacritty.desktop
 launcher_item_app = /usr/share/applications/lxtask.desktop
 
 # ── 任务栏 ──

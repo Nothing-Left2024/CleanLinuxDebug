@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CleanLinux 安装系统
+Name[en]=Install CleanLinux
+Comment=图形化安装器 archinstall (需网络连接)
+Exec=cleanlinux-terminal "CleanLinux 图形化安装" "archinstall"
+Icon=drive-removable-media
+Categories=System;
+Terminal=false
+NoDisplay=false
