@@ -4,7 +4,7 @@ iso_name="CleanLinux"
 iso_label="CLEANLINUX_$(date +%Y%m)"
 iso_publisher="CleanLinux <cleanlinux@example.com>"
 iso_application="CleanLinux Live/Install (NVIDIA + llama.cpp)"
-iso_version="2026.11.07-r3"
+iso_version="2026.11.07-r4"
 install_dir="cleanlinux"
 bootmodes=('bios.syslinux'
            'uefi.systemd-boot')
