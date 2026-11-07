@@ -4,7 +4,7 @@ iso_name="CleanLinux"
 iso_label="CLEANLINUX_$(date +%Y%m)"
 iso_publisher="CleanLinux <cleanlinux@example.com>"
 iso_application="CleanLinux Live/Install (NVIDIA + llama.cpp)"
-iso_version="2026.11.07"
+iso_version="2026.11.07-r2"
 install_dir="cleanlinux"
 bootmodes=('bios.syslinux'
            'uefi.systemd-boot')
@@ -22,6 +22,7 @@ file_permissions=(
   ["/usr/local/bin/cleanlinux-monitor"]="0:0:755"
   ["/usr/local/bin/cleanlinux-monitor-cli"]="0:0:755"
   ["/usr/local/bin/cleanlinux-gpu"]="0:0:755"
+  ["/usr/local/bin/cleanlinux-panel-status"]="0:0:755"
   ["/usr/local/bin/install-nvidia"]="0:0:755"
   ["/usr/local/bin/install-llama-cpp"]="0:0:755"
   ["/usr/local/bin/wallpaper"]="0:0:755"

@@ -85,7 +85,7 @@ while :; do
         100) # 极致模式
             FREED=$(extreme_on)
             yad --info --title="极致模式已开启" --width=380 \
-                --text="已关闭: 壁纸 / 毛玻璃 / 任务栏\n本次释放约 <b>${FREED}MB</b> 内存\n\n下次进入 GUI 仍保持此配置\n功能编辑器可随时恢复" \
+                --text="已关闭: 壁纸 / 毛玻璃 / HUD / 任务栏\n本次释放约 <b>${FREED}MB</b> 内存\n\n下次进入 GUI 仍保持此配置\n功能编辑器可随时恢复" \
                 --button="好:0" 2>/dev/null ;;
         200) # 卸载 Python
             if [ "$PYST" = "off" ]; then

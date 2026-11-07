@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CleanLinux 系统监控
+Name[en]=CleanLinux System Monitor
+Comment=显存/内存液态玻璃仪表盘 · 进程与 GPU 详情
+Exec=cleanlinux-monitor
+Icon=utilities-system-monitor
+Categories=System;Monitor;
+Terminal=false
+NoDisplay=false

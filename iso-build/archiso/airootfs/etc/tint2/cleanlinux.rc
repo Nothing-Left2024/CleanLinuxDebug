@@ -1,0 +1,99 @@
+# CleanLinux 液态玻璃面板 (tint2)
+# 半透明深色底, 配合 picom 模糊形成磨砂效果
+
+# ── 面板 ──
+autohide = 0
+panel_items = LTPSC
+panel_size = 100% 36
+panel_margin = 0 0
+panel_padding = 6 2 6
+panel_position = bottom center horizontal
+panel_layer = top
+panel_window_name = tint2
+wm_menu = 1
+panel_dock = 0
+
+# ── 背景 1: 面板底 (半透明深色) ──
+rounded = 0
+border_width = 1
+background_color = 16181f 55
+border_color = 3a4150 70
+
+# ── 背景 2: 活动窗口高亮 ──
+rounded = 6
+border_width = 1
+background_color = 8ab4f8 30
+border_color = 8ab4f8 60
+
+# ── 背景 3: 任务栏悬停/紧急 ──
+rounded = 6
+border_width = 0
+background_color = f28b82 40
+border_color = f28b82 60
+
+panel_background_id = 1
+launcher_background_id = 0
+taskbar_background_id = 0
+task_background_id = 0
+task_active_background_id = 2
+task_urgent_background_id = 3
+systray_background_id = 0
+clock_background_id = 0
+
+# ── 启动器 ──
+launcher_icon_theme = Papirus
+launcher_icon_size = 24
+launcher_item_app_padding = 4
+launcher_item_app = /usr/share/applications/alacritty.desktop
+launcher_item_app = /usr/share/applications/cleanlinux-features.desktop
+launcher_item_app = /usr/share/applications/cleanlinux-monitor.desktop
+launcher_item_app = /usr/share/applications/lxtask.desktop
+
+# ── 任务栏 ──
+taskbar_mode = single_desktop
+taskbar_padding = 2 2 2
+taskbar_name = 0
+task_padding = 4 2
+task_centered = 1
+task_maximum_size = 180
+task_font = Noto Sans CJK SC 9
+task_font_color = c8cdd8 100
+task_active_font_color = ffffff 100
+task_icon = 1
+task_icon_asb = 100 0 0
+task_active_icon_asb = 100 0 0
+task_urgent_icon_asb = 100 0 0
+task_iconified_icon_asb = 90 0 0
+
+# ── 系统托盘 ──
+systray_padding = 6 2 6
+systray_sort = ascending
+systray_icon_size = 18
+systray_icon_asb = 100 0 0
+
+# ── 时钟 ──
+time1_format = %H:%M
+time2_format = %m-%d %a
+time1_font = Noto Sans CJK SC Bold 10
+time2_font = Noto Sans CJK SC 8
+clock_font_color = e6e6e6 100
+clock_padding = 8 2
+clock_rclick_command = yad --calendar --title 日历
+
+# ── 内存/显存指示 (execp, 5秒刷新) ──
+execp = new 1 {
+    execp_command = /usr/local/bin/cleanlinux-panel-status
+    execp_interval = 5
+    execp_font = Noto Sans CJK SC 9
+    execp_font_color = 8ab4f8 100
+    execp_padding = 8 2
+    execp_centered = 1
+    execp_background_id = 0
+    execp_tooltip = 实时内存与显存占用
+}
+
+# ── 鼠标行为 ──
+mouse_middle = none
+mouse_right = none
+mouse_scroll_up = none
+mouse_scroll_down = none

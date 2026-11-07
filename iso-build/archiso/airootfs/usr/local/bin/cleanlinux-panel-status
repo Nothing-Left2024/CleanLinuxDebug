@@ -1,0 +1,9 @@
+#!/bin/sh
+# tint2 面板状态行: 内存 X% · 显存 Y%
+MEM=$(free | awk '/^Mem:/{printf "%d", $3*100/$2}')
+VRAM=$(cleanlinux-gpu pct 2>/dev/null)
+if [ -n "$VRAM" ]; then
+    printf '内存 %s%% · 显存 %s%%' "$MEM" "$VRAM"
+else
+    printf '内存 %s%%' "$MEM"
+fi

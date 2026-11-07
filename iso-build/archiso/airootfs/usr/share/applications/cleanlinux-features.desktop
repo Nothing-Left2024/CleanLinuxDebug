@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=CleanLinux 功能编辑器
+Name[en]=CleanLinux Feature Editor
+Comment=开关系统功能 · 极致模式释放内存显存
+Exec=cleanlinux-features
+Icon=preferences-system
+Categories=System;Settings;
+Terminal=false
+NoDisplay=false

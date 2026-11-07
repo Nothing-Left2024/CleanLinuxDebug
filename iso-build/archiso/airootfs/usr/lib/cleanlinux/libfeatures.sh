@@ -13,6 +13,7 @@ load_conf() {
     WALLPAPER=on
     BLUR_STRENGTH=12
     TASKBAR=on
+    CONKY=on
     ZRAM=on
     NVIDIA_PERSISTENCE=off
     [ -r "$CONF" ] && . "$CONF"
@@ -28,6 +29,7 @@ save_conf() {
         echo "WALLPAPER=$WALLPAPER"
         echo "BLUR_STRENGTH=$BLUR_STRENGTH"
         echo "TASKBAR=$TASKBAR"
+        echo "CONKY=$CONKY"
         echo "ZRAM=$ZRAM"
         echo "NVIDIA_PERSISTENCE=$NVIDIA_PERSISTENCE"
     } > "$CONF.tmp" && mv "$CONF.tmp" "$CONF"
@@ -101,6 +103,12 @@ apply_desktop_live() {
     else
         pkill -x tint2 2>/dev/null
     fi
+    # HUD 仪表盘
+    if [ "$CONKY" = "on" ]; then
+        pgrep -x conky >/dev/null || conky -c /etc/conky/cleanlinux.conf >/dev/null 2>&1 &
+    else
+        pkill -x conky 2>/dev/null
+    fi
     return 0
 }
 
@@ -130,6 +138,7 @@ extreme_on() {
     WALLPAPER=off
     BLUR_STRENGTH=0
     TASKBAR=off
+    CONKY=off
     save_conf
     apply_desktop_live
     AFTER=$(mem_avail_mb)

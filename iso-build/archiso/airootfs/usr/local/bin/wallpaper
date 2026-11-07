@@ -1,18 +1,44 @@
 #!/bin/sh
 # 动态壁纸管理（仅图形模式）
+# 视频模式: mpv 全屏 (~40MB) / 图片模式: xwallpaper 静态 + feh 轮播循环
+PID_FILE=/run/cleanlinux-wallpaper.pid
 WALL="/usr/share/wallpapers"
+
+slideshow_running() {
+    [ -r "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
 case "$1" in
   start)
-    pkill -f "mpv.*-fullscreen" 2>/dev/null || true
+    # 已在运行则跳过
+    pgrep -x mpv >/dev/null 2>&1 && exit 0
+    slideshow_running && exit 0
     VIDEO="$(ls "$WALL"/*.mp4 2>/dev/null | head -1)"
     if [ -n "$VIDEO" ]; then
-      mpv --no-border --no-osc --no-osd-bar --loop --volume=0 --fullscreen "$VIDEO" &
-      echo "动态壁纸已启动: $VIDEO"
+        mpv --no-border --no-osc --no-osd-bar --loop --volume=0 --fullscreen "$VIDEO" >/dev/null 2>&1 &
+        echo "动态壁纸已启动: $VIDEO"
+    elif [ -n "$(ls "$WALL"/*.png 2>/dev/null)" ]; then
+        # 静态壁纸 + 每 5 分钟轮播 (循环本体仅一个 sh, ~0 内存)
+        (
+            while :; do
+                for P in "$WALL"/*.png; do
+                    xwallpaper --zoom "$P" 2>/dev/null
+                    sleep 300
+                done
+            done
+        ) >/dev/null 2>&1 &
+        echo $! > "$PID_FILE"
+        echo "壁纸轮播已启动: $WALL/*.png"
     else
-      echo "$WALL 下没有 .mp4 文件，请放入视频后重试"
+        echo "$WALL 下没有 .mp4/.png 文件"
     fi
     ;;
-  stop) pkill -f "mpv.*-fullscreen" 2>/dev/null && echo "已停止" || echo "未在运行" ;;
+  stop)
+    STOPPED=0
+    if pgrep -x mpv >/dev/null 2>&1; then pkill -x mpv; STOPPED=1; fi
+    if slideshow_running; then kill "$(cat "$PID_FILE")" 2>/dev/null; rm -f "$PID_FILE"; STOPPED=1; fi
+    [ "$STOPPED" = "1" ] && echo "已停止" || echo "未在运行"
+    ;;
   list) ls "$WALL"/ 2>/dev/null ;;
   *) echo "用法: wallpaper [start|stop|list]" ;;
 esac

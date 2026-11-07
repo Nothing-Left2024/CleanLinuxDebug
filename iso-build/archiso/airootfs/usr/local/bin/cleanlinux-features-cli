@@ -38,7 +38,7 @@ while :; do
     # 特殊项
     if has extreme; then
         FREED=$(extreme_on)
-        dialog --title "极致模式" --msgbox "已关闭壁纸/毛玻璃/任务栏\n本次释放约 ${FREED} MB 内存\n下次进入 GUI 仍保持此配置" 9 50
+        dialog --title "极致模式" --msgbox "已关闭壁纸/毛玻璃/HUD/任务栏\n本次释放约 ${FREED} MB 内存\n下次进入 GUI 仍保持此配置" 9 50
         continue
     fi
     if has python-rm; then
