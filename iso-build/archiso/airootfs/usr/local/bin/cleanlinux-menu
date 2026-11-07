@@ -1,12 +1,13 @@
 #!/bin/sh
 # CleanLinux 文本菜单 — 显示在命令行模式
+. /usr/lib/cleanlinux/libfeatures.sh
 run() { clear; "$@"; }
 
 while :; do
   clear
   echo "╔═══════════════════════════════════════════════════╗"
   echo "║            CleanLinux 系统菜单（命令行模式）       ║"
-  echo "║            内存占用约 120MB · 按 Enter 继续          ║"
+  echo "║            可用内存 $(mem_avail_mb)MB · 按 Enter 继续              ║"
   echo "╚═══════════════════════════════════════════════════╝"
   echo ""
   echo "  [1] 图形化试用系统（openbox + 液态玻璃 + 动态壁纸）"
@@ -14,7 +15,9 @@ while :; do
   echo "  [3] 安装 NVIDIA 驱动（RTX 2060 优化）"
   echo "  [4] 编译 llama.cpp（CUDA 加速）"
   echo "  [5] 文本模式安装系统（archinstall）"
-  echo "  [6] 查看系统状态（内存/GPU/磁盘）"
+  echo "  [6] 功能编辑器（开关服务/桌面组件/极致模式省内存）"
+  echo "  [7] 系统监控（显存/内存实时仪表盘）"
+  echo "  [8] 恢复 Python（若已卸载, archinstall 需要）"
   echo "  [0] 返回 Shell"
   echo ""
   read -r -p "请选择: " choice
@@ -24,7 +27,16 @@ while :; do
     3) clear; /usr/local/bin/install-nvidia ;;
     4) clear; /usr/local/bin/install-llama-cpp ;;
     5) clear; archinstall ;;
-    6) clear; free -h; echo; nvidia-smi 2>/dev/null || inxi -G; echo; df -h / ;;
+    6) clear; /usr/local/bin/cleanlinux-features-cli ;;
+    7) clear; /usr/local/bin/cleanlinux-monitor-cli ;;
+    8) clear
+       if [ "$(python_state)" = "off" ]; then
+           echo "正在恢复 Python（archinstall 需要）..."
+           python_restore && echo "✅ Python 已恢复" || echo "❌ 恢复失败, 请检查网络"
+       else
+           echo "Python 已存在, 无需恢复"
+       fi
+       sleep 2 ;;
     0) echo "已返回 Shell"; break ;;
     *) echo "无效选项"; sleep 1 ;;
   esac

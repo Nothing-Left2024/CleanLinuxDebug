@@ -1,0 +1,49 @@
+#!/bin/sh
+# CleanLinux 系统监控 — GUI 套件入口
+# conky 仪表盘(常驻桌面) + lxtask(进程) + nvtop(GPU 深度)
+. /usr/lib/cleanlinux/libfeatures.sh
+
+start_dashboard()  { pgrep -x conky >/dev/null || conky -c /etc/conky/cleanlinux.conf >/dev/null 2>&1 & }
+stop_dashboard()   { pkill -x conky 2>/dev/null; }
+
+summary_markup() {
+    TOTAL=$(mem_total_mb); AVAIL=$(mem_avail_mb)
+    VRAM=$(cleanlinux-gpu line)
+    UTIL=$(cleanlinux-gpu util)
+    TEMP=$(cleanlinux-gpu temp)
+    PWR=$(cleanlinux-gpu power)
+    MODEL=$(cleanlinux-gpu model)
+    S="<b>内存:</b> 可用 ${AVAIL} / ${TOTAL} MB"
+    [ -n "$MODEL" ] && S="$S
+<b>GPU:</b> $MODEL
+<b>显存:</b> $VRAM
+<b>利用率:</b> ${UTIL:-0}%   <b>温度:</b> ${TEMP}°C   <b>功耗:</b> ${PWR}"
+    printf '%s' "$S"
+}
+
+DASH_ON=$(pgrep -x conky >/dev/null && echo on || echo off)
+
+while :; do
+    [ "$DASH_ON" = "on" ] && start_dashboard
+
+    sel=$(yad --list --title="CleanLinux 系统监控" --width=440 --height=380 \
+        --text="$(summary_markup)" \
+        --column="工具" --column="说明" --hide-column=1 \
+        "proc"     "进程管理 (lxtask) — 杀进程/看内存" \
+        "gpu"      "GPU 详情 (nvtop) — 每进程显存/曲线" \
+        "dash-off" "关闭桌面仪表盘 (释放 ~2MB)" \
+        "dash-on"  "开启桌面仪表盘 (液态玻璃 HUD)" \
+        "feat"     "功能编辑器 — 关闭组件省内存" \
+        --button="启动!go-up:0" --button="退出:252" 2>/dev/null)
+    ret=$?
+    [ $ret -ne 0 ] && { stop_dashboard; exit 0; }
+
+    sel=$(printf '%s' "$sel" | cut -d'|' -f1)
+    case "$sel" in
+        proc)     lxtask >/dev/null 2>&1 & ;;
+        gpu)      alacritty -e nvtop >/dev/null 2>&1 & ;;
+        dash-off) DASH_ON=off; stop_dashboard ;;
+        dash-on)  DASH_ON=on; start_dashboard ;;
+        feat)     cleanlinux-features >/dev/null 2>&1 & ;;
+    esac
+done

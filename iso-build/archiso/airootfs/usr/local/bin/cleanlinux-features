@@ -1,0 +1,102 @@
+#!/bin/sh
+# CleanLinux GUI 功能编辑器 (yad)
+# 开关系统功能、实时生效、显示内存收益
+# 后端逻辑: /usr/lib/cleanlinux/libfeatures.sh
+
+. /usr/lib/cleanlinux/libfeatures.sh
+
+header_text() {
+    TOTAL=$(mem_total_mb)
+    AVAIL=$(mem_avail_mb)
+    GPU_LINE=""
+    if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+        GPU_LINE=$(nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null | \
+            awk -F', ' '{printf "\n<b>显存:</b> %.1f / %.1f GB", $1/1024, $2/1024}')
+    fi
+    printf "<b>可用内存:</b> %d / %d MB%s\n<i>关闭组件立即释放内存, 极致模式一键最大化可用资源</i>" \
+        "$AVAIL" "$TOTAL" "$GPU_LINE"
+}
+
+apply_all() {  # $1..: yad form 输出行字段
+    out="$1"
+    # yad LBL 字段不进输出; 若版本不同导致 12 列则偏移 2
+    nf=$(printf '%s' "$out" | awk -F'|' '{print NF}')
+    off=0
+    [ "$nf" -ge 12 ] && off=2
+    f() { printf '%s' "$out" | cut -d'|' -f$((off + $1)); }
+
+    [ "$(f 1)" = "TRUE" ]  && svc_toggle NetworkManager on || svc_toggle NetworkManager off
+    [ "$(f 2)" = "TRUE" ]  && svc_toggle sshd on || svc_toggle sshd off
+    [ "$(f 3)" = "TRUE" ]  && svc_toggle systemd-resolved on || svc_toggle systemd-resolved off
+    [ "$(f 4)" = "TRUE" ]  && svc_toggle cups on || svc_toggle cups off
+    [ "$(f 5)" = "TRUE" ]  && getty_toggle on || getty_toggle off
+
+    # 桌面
+    f 6 | grep -q TRUE && WALLPAPER=on || WALLPAPER=off
+    BLUR_STRENGTH=$(f 7)
+    case "$BLUR_STRENGTH" in ''|*[!0-9]*) BLUR_STRENGTH=12 ;; esac
+    [ "$BLUR_STRENGTH" -gt 20 ] 2>/dev/null && BLUR_STRENGTH=20
+    f 8 | grep -q TRUE && TASKBAR=on || TASKBAR=off
+
+    # AI/性能
+    f 9 | grep -q TRUE  && ZRAM=on || ZRAM=off
+    f 10 | grep -q TRUE && NVIDIA_PERSISTENCE=on || NVIDIA_PERSISTENCE=off
+
+    save_conf
+    apply_desktop_live
+    [ "$ZRAM" = "on" ] && zram_on || zram_off
+    nvidia_persist "$NVIDIA_PERSISTENCE"
+}
+
+while :; do
+    load_conf
+    NET=$(svc_state NetworkManager); SSH=$(svc_state sshd)
+    RES=$(svc_state systemd-resolved); CUPS=$(svc_state cups)
+    GTY=$(getty_state); ZST=$(zram_state)
+    PYST=$(python_state)
+
+    chk() { [ "$2" = enabled ] || [ "$2" = on ] && echo TRUE || echo FALSE; }
+
+    out=$(yad --form \
+        --title="CleanLinux 功能编辑器" \
+        --width=580 \
+        --text="$(header_text)" \
+        --field="  系统服务":LBL \
+        --field="网络管理 NetworkManager":CHK "$(chk x "$NET")" \
+        --field="SSH 远程登录 sshd":CHK "$(chk x "$SSH")" \
+        --field="DNS 解析 resolved":CHK "$(chk x "$RES")" \
+        --field="打印服务 cups":CHK "$(chk x "$CUPS")" \
+        --field="额外终端 tty2-6":CHK "$(chk x "$GTY")" \
+        --field="  桌面组件（内存大项）":LBL \
+        --field="动态壁纸 mpv ~40MB":CHK "$(chk x "$WALLPAPER")" \
+        --field="毛玻璃强度 (0=关闭)":NUM "$BLUR_STRENGTH!0..20!1" \
+        --field="任务栏 tint2 ~10MB":CHK "$(chk x "$TASKBAR")" \
+        --field="  AI / 性能":LBL \
+        --field="ZRAM 内存压缩交换":CHK "$(chk x "$ZST")" \
+        --field="NVIDIA 持久模式":CHK "$(chk x "$NVIDIA_PERSISTENCE")" \
+        --button="应用!system-run:0" \
+        --button="极致模式!face-cool:100" \
+        --button="卸载 Python!dialog-warning:200" \
+        --button="退出:252" 2>/dev/null)
+    ret=$?
+
+    case $ret in
+        0)   apply_all "$out" ;;
+        100) # 极致模式
+            FREED=$(extreme_on)
+            yad --info --title="极致模式已开启" --width=380 \
+                --text="已关闭: 壁纸 / 毛玻璃 / 任务栏\n本次释放约 <b>${FREED}MB</b> 内存\n\n下次进入 GUI 仍保持此配置\n功能编辑器可随时恢复" \
+                --button="好:0" 2>/dev/null ;;
+        200) # 卸载 Python
+            if [ "$PYST" = "off" ]; then
+                yad --info --title="Python" --width=340 --text="Python 当前已卸载" --button="好:0" 2>/dev/null
+            elif yad --question --title="危险操作" --width=440 \
+                --text="<b>确定卸载 Python？</b>\n\n释放约 30-80MB 磁盘/内存空间\n\n⚠️  <b>后果:</b>\n· archinstall 图形安装器不可用\n· 依赖 Python 的工具失效\n\n恢复方式: cleanlinux-menu → 恢复 Python" \
+                --button="取消:1" --button="确认卸载:0" 2>/dev/null; then
+                python_remove
+                yad --info --title="完成" --width=340 \
+                    --text="Python 已卸载\n恢复: 文本菜单 → [7] 恢复 Python" --button="好:0" 2>/dev/null
+            fi ;;
+        252|*) exit 0 ;;
+    esac
+done

@@ -1,0 +1,85 @@
+#!/bin/sh
+# CleanLinux 系统监控 — TUI 版 (CLI 模式可用)
+# ANSI 彩色仪表盘, 5 秒自动刷新
+# 按键: p=进程 htop  g=nvtop GPU  f=功能编辑器  q=退出
+
+ESC=$(printf '\033')
+bar() {  # $1=0-100  $2=宽度
+    pct=$1; [ -z "$pct" ] && pct=0
+    [ "$pct" -gt 100 ] 2>/dev/null && pct=100
+    w=$2; [ -z "$w" ] && w=30
+    fill=$((pct * w / 100))
+    i=0; out=""
+    while [ $i -lt $w ]; do
+        if [ $i -lt $fill ]; then out="${out}█"; else out="${out}░"; fi
+        i=$((i + 1))
+    done
+    # >80% 红色告警
+    if [ "$pct" -gt 80 ]; then
+        printf '%s[31m%s %d%%%s[0m' "$ESC" "$out" "$pct" "$ESC"
+    else
+        printf '%s[32m%s %d%%%s[0m' "$ESC" "$out" "$pct" "$ESC"
+    fi
+}
+
+cpu_sample() {  # 输出 "总节拍 空闲节拍"
+    awk '$1=="cpu"{t=0; for(i=2;i<=NF;i++) t+=$i; print t, $5}' /proc/stat
+}
+
+screen() {
+    # 内存
+    eval "$(free -m | awk '/^Mem:/{printf "MT=%d MU=%d MA=%d", $2, $3, $7}')"
+    SW=$(free -m | awk '/^Swap:/{print $3+0}')
+    SWT=$(free -m | awk '/^Swap:/{print $2+0}')
+    MPCT=$((MU * 100 / (MT > 0 ? MT : 1)))
+
+    # CPU: 0.4 秒两次采样求差 (瞬时值)
+    set -- $(cpu_sample); T1=$1; I1=$2
+    sleep 0.4
+    set -- $(cpu_sample); T2=$1; I2=$2
+    DT=$((T1 - T2)); DI=$((I1 - I2))
+    CPCT=0
+    [ "$DT" -gt 0 ] 2>/dev/null && CPCT=$((100 * (DT - DI) / DT))
+
+    # GPU
+    MODEL=$(cleanlinux-gpu model)
+    VRAM_LINE=$(cleanlinux-gpu line)
+    VPCT=$(cleanlinux-gpu pct)
+    UTIL=$(cleanlinux-gpu util)
+    TEMP=$(cleanlinux-gpu temp)
+    PWR=$(cleanlinux-gpu power)
+
+    printf '%s[H%s[2J' "$ESC" "$ESC"   # 清屏复位
+    printf '%b' "
+${ESC}[1;34m╔════════════════════════════════════════════════════╗${ESC}[0m
+${ESC}[1;34m║            CleanLinux 系统监控     ${MODEL:-无 NVIDIA 驱动}
+${ESC}[1;34m╚════════════════════════════════════════════════════╝${ESC}[0m
+
+ CPU  $(bar "$CPCT" 34)   $(nproc 2>/dev/null || echo '?') 核
+ 内存 $(bar "$MPCT" 34)   可用 ${MA}MB / ${MT}MB
+ 交换 $(bar $((SWT > 0 ? SW * 100 / SWT : 0)) 34)   ${SW}MB / ${SWT}MB (zram 压缩)
+
+${ESC}[1;34m—— GPU 显存 ——${ESC}[0m
+ 显存 $(bar "$VPCT" 34)   ${VRAM_LINE:-未检测到驱动}
+ 利用 $(bar "$UTIL" 34)   温度 ${TEMP}°C   功耗 ${PWR:-N/A}
+
+${ESC}[1;34m—— GPU 进程 ————————————————${ESC}[0m
+$(cleanlinux-gpu top | sed 's/^/ /')
+${ESC}[1;34m—— 内存进程 TOP6 ————————————————${ESC}[0m
+$(ps axo rss,comm --sort=-rss 2>/dev/null | awk 'NR>1 && NR<=7 {printf " %-10s %d MB\n", $2, $1/1024}')
+
+${ESC}[1;36m[p]进程管理(htop) [g]GPU详情(nvtop) [f]功能编辑器 [q]退出 — 5秒自动刷新${ESC}[0m
+"
+}
+
+while :; do
+    screen
+    key=""
+    read -r -t 5 -n 1 key 2>/dev/null
+    case "$key" in
+        p) alacritty -e htop >/dev/null 2>&1 || htop ;;
+        g) alacritty -e nvtop >/dev/null 2>&1 || nvtop ;;
+        f) cleanlinux-features-cli ;;
+        q|Q) clear; exit 0 ;;
+    esac
+done

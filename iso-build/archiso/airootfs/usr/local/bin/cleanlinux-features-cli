@@ -1,0 +1,76 @@
+#!/bin/sh
+# CleanLinux 功能编辑器 — TUI 版（dialog，CLI 模式可用）
+# 后端逻辑: /usr/lib/cleanlinux/libfeatures.sh
+
+. /usr/lib/cleanlinux/libfeatures.sh
+
+onoff() { [ "$2" = "enabled" ] || [ "$2" = "on" ] && echo on || echo off; }
+
+while :; do
+    load_conf
+    exec 3>&1
+    sel=$(dialog --clear --title "CleanLinux 功能编辑器" \
+        --checklist "可用内存: $(mem_avail_mb) MB / $(mem_total_mb) MB
+空格 选中/取消 → 开/关功能，OK 应用" 24 66 14 \
+        "netmgr"   "网络管理 NetworkManager"   "$(onoff x "$(svc_state NetworkManager)")" \
+        "sshd"     "SSH 远程登录"              "$(onoff x "$(svc_state sshd)")" \
+        "resolved" "DNS 解析 resolved"         "$(onoff x "$(svc_state systemd-resolved)")" \
+        "cups"     "打印服务 cups"             "$(onoff x "$(svc_state cups)")" \
+        "getty"    "额外终端 tty2-6"           "$(onoff x "$(getty_state)")" \
+        "wallpaper" "动态壁纸 mpv ~40MB"       "$(onoff x "$WALLPAPER")" \
+        "blur"     "毛玻璃特效 (当前强度 $BLUR_STRENGTH)" \
+                   "$([ "$BLUR_STRENGTH" -gt 0 ] 2>/dev/null && echo on || echo off)" \
+        "taskbar"  "任务栏 tint2 ~10MB"        "$(onoff x "$TASKBAR")" \
+        "zram"     "ZRAM 内存压缩交换"         "$(onoff x "$(zram_state)")" \
+        "nvidia-pm" "NVIDIA 持久模式"          "$(onoff x "$NVIDIA_PERSISTENCE")" \
+        "extreme"  "★ 极致模式（关壁纸+毛玻璃+任务栏）" off \
+        "python-rm" "卸载 Python（危险!）"     off \
+        "python-add" "恢复 Python"             off \
+        2>&1 1>&3)
+    ret=$?
+    exec 3>&-
+    [ $ret -ne 0 ] && exit 0
+
+    eval "set -- $sel"   # 解析引号包裹的 tag 列表
+
+    has() { for t in "$@"; do [ "$t" = "$1" ] && return 0; done; return 1; }
+
+    # 特殊项
+    if has extreme; then
+        FREED=$(extreme_on)
+        dialog --title "极致模式" --msgbox "已关闭壁纸/毛玻璃/任务栏\n本次释放约 ${FREED} MB 内存\n下次进入 GUI 仍保持此配置" 9 50
+        continue
+    fi
+    if has python-rm; then
+        dialog --title "危险操作" --yesno "确定卸载 Python？\n\n后果: archinstall 安装器不可用\n恢复: 本菜单 → 恢复 Python" 10 50 && python_remove
+        continue
+    fi
+    if has python-add; then
+        python_restore
+        dialog --title "完成" --msgbox "Python 已恢复" 7 40
+        continue
+    fi
+
+    # 常规开关
+    has netmgr   && svc_toggle NetworkManager on    || svc_toggle NetworkManager off
+    has sshd     && svc_toggle sshd on              || svc_toggle sshd off
+    has resolved && svc_toggle systemd-resolved on  || svc_toggle systemd-resolved off
+    has cups     && svc_toggle cups on              || svc_toggle cups off
+    has getty    && getty_toggle on                 || getty_toggle off
+    has wallpaper && WALLPAPER=on || WALLPAPER=off
+    has taskbar  && TASKBAR=on || TASKBAR=off
+    has zram     && ZRAM=on || ZRAM=off
+    has nvidia-pm && NVIDIA_PERSISTENCE=on || NVIDIA_PERSISTENCE=off
+    has blur     && [ "$BLUR_STRENGTH" -eq 0 ] 2>/dev/null && {
+        exec 3>&1
+        NEW=$(dialog --title "毛玻璃强度" --inputbox "输入 1-20（0=关闭）" 9 40 "12" 2>&1 1>&3)
+        exec 3>&-
+        case "$NEW" in ''|*[!0-9]*) NEW=12 ;; esac
+        [ "$NEW" -gt 20 ] 2>/dev/null && NEW=20
+        BLUR_STRENGTH=$NEW
+    }
+    save_conf
+    apply_desktop_live
+    [ "$ZRAM" = "on" ] && zram_on || zram_off
+    nvidia_persist "$NVIDIA_PERSISTENCE"
+done

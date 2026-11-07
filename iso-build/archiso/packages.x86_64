@@ -62,6 +62,10 @@ mpv
 feh
 xwallpaper
 xterm
+# ── 自举系统工具（不依赖 Python）──
+yad
+lxtask
+conky
 # ── NVIDIA (RTX 2060) ──
 nvidia-open-dkms
 nvidia-utils

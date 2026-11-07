@@ -3,6 +3,11 @@
   <menu id="root-menu" label="CleanLinux">
     <menu id="cleanlinux" label="CleanLinux">
       <item label="文本安装器 (archinstall)" action="Execute" command="alacritty -e archinstall"/>
+      <separator label="系统工具"/>
+      <item label="功能编辑器 (开关功能省内存)" action="Execute" command="cleanlinux-features"/>
+      <item label="系统监控 (显存/内存仪表盘)" action="Execute" command="cleanlinux-monitor"/>
+      <item label="进程管理 (lxtask)" action="Execute" command="lxtask"/>
+      <item label="GPU 详情 (nvtop)" action="Execute" command="alacritty -e nvtop"/>
       <separator label="实用工具"/>
       <item label="终端 (Alacritty)" action="Execute" command="alacritty"/>
       <item label="系统菜单 (GPU/llama.cpp)" action="Execute" command="alacritty -e /bin/sh -c 'cleanlinux-menu'"/>
@@ -10,7 +15,6 @@
       <item label="编译 llama.cpp (CUDA)" action="Execute" command="alacritty -e /bin/sh -c 'install-llama-cpp; read -p 按回车关闭'"/>
       <separator label="系统"/>
       <item label="磁盘管理 (GParted)" action="Execute" command="gparted"/>
-      <item label="GPU 监控 (nvtop)" action="Execute" command="alacritty -e nvtop"/>
       <separator label="电源"/>
       <item label="重启" action="Restart"/>
       <item label="关机" action="Exit"/>

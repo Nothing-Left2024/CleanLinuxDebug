@@ -1,0 +1,45 @@
+#!/bin/sh
+# CleanLinux GPU 信息助手 — 供 conky/监控器复用
+# 用法: cleanlinux-gpu [pct|util|line|temp|power|top|name|model]
+# 无 NVIDIA 驱动时输出空/降级文本
+
+GPU_OK() {
+    command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1
+}
+
+case "$1" in
+    pct)   # 显存占用百分比 0-100 (conky execbar 用)
+        GPU_OK && nvidia-smi --query-gpu=memory.used,memory.total \
+            --format=csv,noheader,nounits | awk -F', ' '{printf "%d", $1*100/$2}'
+        ;;
+    cpu)   # CPU 总占用百分比 0-100 (conky execbar 用)
+        awk -v FS=' +' '/^cpu /{print int(100-($5*100/($2+$3+$4+$5+$6)))}' /proc/stat
+        ;;
+    util)  # GPU 利用率百分比 0-100
+        GPU_OK && nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits
+        ;;
+    line)  # 显存一行摘要: 4.10 / 6.00 GB (68%)
+        GPU_OK && nvidia-smi --query-gpu=memory.used,memory.total \
+            --format=csv,noheader,nounits | \
+            awk -F', ' '{p=$1*100/$2; printf "%.2f / %.2f GB (%d%%)", $1/1024, $2/1024, p}'
+        ;;
+    temp)  GPU_OK && nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader ;;
+    power) GPU_OK && nvidia-smi --query-gpu=power.draw --format=csv,noheader ;;
+    model) GPU_OK && nvidia-smi --query-gpu=name --format=csv,noheader ;;
+    top)   # 显存占用 TOP 进程: "名称 → 显存"
+        GPU_OK && nvidia-smi --query-compute-apps=pid,used_memory \
+            --format=csv,noheader | head -5 | awk -F', ' '{
+            cmd="ps -p " $1 " -o comm="
+            (cmd | getline n); close(cmd)
+            gsub(/MiB/,"",$2)
+            printf "%s → %.2f GB\n", n, $2/1024
+        }'
+        ;;
+    ram_of)  # 显存中被占用但无 compute 进程时的进程明细
+        GPU_OK && nvidia-smi --query-compute-apps=pid,process_name,used_memory \
+            --format=csv,noheader
+        ;;
+    *)
+        echo "用法: cleanlinux-gpu [pct|util|line|temp|power|top|model]"
+        ;;
+esac
